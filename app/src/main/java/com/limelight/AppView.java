@@ -23,13 +23,16 @@ import com.limelight.utils.SpinnerDialog;
 import com.limelight.utils.UiHelper;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Service;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -39,14 +42,20 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LinearInterpolator;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
+import org.w3c.dom.Text;
 import org.xmlpull.v1.XmlPullParserException;
 
 public class AppView extends Activity implements AdapterFragmentCallbacks {
@@ -77,6 +86,10 @@ public class AppView extends Activity implements AdapterFragmentCallbacks {
     public final static String UUID_EXTRA = "UUID";
     public final static String NEW_PAIR_EXTRA = "NewPair";
     public final static String SHOW_HIDDEN_APPS_EXTRA = "ShowHiddenApps";
+
+    RelativeLayout previous, current;
+    TextView txtPrevious, txtCurrent;
+    ImageView imgPrevious, imgCurrent;
 
     private ComputerManagerService.ComputerManagerBinder managerBinder;
     private final ServiceConnection serviceConnection = new ServiceConnection() {
@@ -309,7 +322,6 @@ public class AppView extends Activity implements AdapterFragmentCallbacks {
         }
 
         String computerName = getIntent().getStringExtra(NAME_EXTRA);
-
         TextView label = findViewById(R.id.appListText);
         setTitle(computerName);
         label.setText(computerName);
@@ -551,6 +563,7 @@ public class AppView extends Activity implements AdapterFragmentCallbacks {
 
                 // First handle app updates and additions
                 for (NvApp app : appList) {
+
                     boolean foundExistingApp = false;
 
                     // Try to update an existing app in the list first
@@ -626,6 +639,38 @@ public class AppView extends Activity implements AdapterFragmentCallbacks {
     @Override
     public void receiveAbsListView(AbsListView listView) {
         listView.setAdapter(appGridAdapter);
+
+        listView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                previous = current;
+                txtPrevious = txtCurrent;
+                imgPrevious = imgCurrent;
+                current = (RelativeLayout) view.findViewById(R.id.grid_relative);
+                txtCurrent = (TextView) view.findViewById(R.id.grid_text);
+                imgCurrent = (ImageView) view.findViewById(R.id.grid_image);
+                //View viewShine = view.findViewById(R.id.shine);
+                //Animation shine = AnimationUtils.loadAnimation(listView.getContext(),
+                //        R.anim.left_right);
+                //viewShine.startAnimation(shine);
+
+                current.startAnimation(AnimationUtils.loadAnimation(listView.getContext(),
+                        R.anim.zoom_in));
+                txtCurrent.setVisibility(View.VISIBLE);
+                imgCurrent.setBackground(getResources().getDrawable(R.drawable.image_background));
+                if (previous != null) {
+                    previous.startAnimation(AnimationUtils.loadAnimation(listView.getContext(),
+                            R.anim.zoom_out));
+                    txtPrevious.setVisibility(View.INVISIBLE);
+                    imgPrevious.setBackgroundResource(android.R.color.transparent);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
         listView.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int pos,
@@ -643,6 +688,14 @@ public class AppView extends Activity implements AdapterFragmentCallbacks {
         UiHelper.applyStatusBarPadding(listView);
         registerForContextMenu(listView);
         listView.requestFocus();
+        listView.setSelection(1);
+
+        //new AlertDialog.Builder(listView.getContext())
+        //        .setTitle("Message")
+        //        .setMessage("ID:" + listView.getFocusedChild().toString())
+        //        .setNegativeButton(android.R.string.no, null)
+        //        .setIcon(android.R.drawable.ic_dialog_alert)
+        //        .show();
     }
 
     public static class AppObject {

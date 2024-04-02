@@ -202,7 +202,7 @@ public class CachedAppAssetLoader {
                 imageView.setImageDrawable(asyncDrawable);
                 imageView.startAnimation(AnimationUtils.loadAnimation(imageView.getContext(), R.anim.boxart_fadein));
                 imageView.setVisibility(View.VISIBLE);
-                textView.setVisibility(View.VISIBLE);
+                //textView.setVisibility(View.VISIBLE);
                 task.executeOnExecutor(networkExecutor, tuple);
             }
         }
@@ -220,7 +220,7 @@ public class CachedAppAssetLoader {
                 // Fade in the box art
                 if (bitmap != null) {
                     // Show the text if it's a placeholder
-                    textView.setVisibility(isBitmapPlaceholder(bitmap) ? View.VISIBLE : View.GONE);
+                    //textView.setVisibility(isBitmapPlaceholder(bitmap) ? View.VISIBLE : View.GONE);
 
                     if (imageView.getVisibility() == View.VISIBLE) {
                         // Fade out the placeholder first
